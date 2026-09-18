@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "250887337624",
+    "project_id": "alquigo-bb0c5",
+    "storage_bucket": "alquigo-bb0c5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:250887337624:android:7da4969e30dc72eb7e82ed",
+        "android_client_info": {
+          "package_name": "com.example.alquigo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbY9HDQzbm5wzrBTkKH-FWpViiCSIZgYo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
