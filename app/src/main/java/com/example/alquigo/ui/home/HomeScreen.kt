@@ -10,7 +10,10 @@ import com.example.alquigo.ui.auth.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: AuthViewModel) {
+fun HomeScreen(
+    viewModel: AuthViewModel,
+    onNavigateToAddProperty: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -34,6 +37,15 @@ fun HomeScreen(viewModel: AuthViewModel) {
             Text(text = "Bienvenido a AlquiGo", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = "Tu sesión está activa.")
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Button(
+                onClick = onNavigateToAddProperty,
+                modifier = Modifier.fillMaxWidth().height(50.dp)
+            ) {
+                Text("➕ Registrar Propiedad", style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
 }

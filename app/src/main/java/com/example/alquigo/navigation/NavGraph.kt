@@ -15,6 +15,7 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
+    object AddProperty : Screen("add_property")
 }
 
 @Composable
@@ -58,7 +59,15 @@ fun NavGraph(
             )
         }
         composable(Screen.Home.route) {
-            HomeScreen(viewModel = viewModel)
+            HomeScreen(
+                viewModel = viewModel,
+                onNavigateToAddProperty = { navController.navigate(Screen.AddProperty.route) }
+            )
+        }
+        composable(Screen.AddProperty.route) {
+            com.example.alquigo.ui.property.AddPropertyScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }
