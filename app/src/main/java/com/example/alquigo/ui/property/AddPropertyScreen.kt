@@ -21,13 +21,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.alquigo.data.model.Property
+import com.example.alquigo.data.repository.PropertyRepository
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPropertyScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val repository = remember { PropertyRepository() }
     
-    // Estados locales para el formulario (Sin ViewModels como se solicitó)
+    // Estados locales para el formulario
     var titulo by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
     var precio by remember { mutableStateOf("") }
@@ -35,6 +39,7 @@ fun AddPropertyScreen(onNavigateBack: () -> Unit) {
     var tipo by remember { mutableStateOf("Casa") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     
+    var isLoading by remember { mutableStateOf(false) }
     var expandedTipoDropdown by remember { mutableStateOf(false) }
     val tiposDisponibles = listOf("Casa", "Apartamento", "Habitación", "Local Comercial")
 
@@ -43,7 +48,7 @@ fun AddPropertyScreen(onNavigateBack: () -> Unit) {
     ) { uri: Uri? ->
         if (uri != null) {
             imageUri = uri
-            Toast.makeText(context, "Imagen seleccionada de la galería (Simulación)", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Imagen seleccionada (Simulación)", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -73,7 +78,7 @@ fun AddPropertyScreen(onNavigateBack: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(160.dp)
-                    .clickable { imagePickerLauncher.launch("image/*") },
+                    .clickable(enabled = !isLoading) { imagePickerLauncher.launch("image/*") },
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
@@ -97,12 +102,6 @@ fun AddPropertyScreen(onNavigateBack: () -> Unit) {
                                 text = "¡Imagen Simulada Seleccionada!",
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary,
-                                textAlign = TextAlign.Center
-                            )
-                            Text(
-                                text = imageUri.toString().take(45) + "...",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.Gray,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -133,7 +132,8 @@ fun AddPropertyScreen(onNavigateBack: () -> Unit) {
                 onValueChange = { titulo = it },
                 label = { Text("Título de la Propiedad") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                enabled = !isLoading
             )
 
             OutlinedTextField(
@@ -141,7 +141,8 @@ fun AddPropertyScreen(onNavigateBack: () -> Unit) {
                 onValueChange = { descripcion = it },
                 label = { Text("Descripción") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 3
+                minLines = 3,
+                enabled = !isLoading
             )
 
             OutlinedTextField(
@@ -150,7 +151,8 @@ fun AddPropertyScreen(onNavigateBack: () -> Unit) {
                 label = { Text("Precio por Mes ($)") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true
+                singleLine = true,
+                enabled = !isLoading
             )
 
             OutlinedTextField(
@@ -158,10 +160,11 @@ fun AddPropertyScreen(onNavigateBack: () -> Unit) {
                 onValueChange = { direccion = it },
                 label = { Text("Dirección Completa") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                enabled = !isLoading
             )
 
-            // Selector de Tipo de Propiedad (Dropdown customizado para evitar errores de API/versiones)
+            // Selector de Tipo de Propiedad
             Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -173,12 +176,13 @@ fun AddPropertyScreen(onNavigateBack: () -> Unit) {
                     trailingIcon = {
                         Text(
                             text = "▼ ",
-                            modifier = Modifier.clickable { expandedTipoDropdown = true }
+                            modifier = Modifier.clickable(enabled = !isLoading) { expandedTipoDropdown = true }
                         )
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { expandedTipoDropdown = true }
+                        .clickable(enabled = !isLoading) { expandedTipoDropdown = true },
+                    enabled = !isLoading
                 )
                 
                 DropdownMenu(
@@ -200,12 +204,13 @@ fun AddPropertyScreen(onNavigateBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Botón de Registro
+            // Botón de Registro Real
             Button(
                 onClick = {
                     if (titulo.isBlank() || descripcion.isBlank() || precio.isBlank() || direccion.isBlank()) {
                         Toast.makeText(context, "Por favor complete todos los campos obligatorios", Toast.LENGTH_SHORT).show()
                     } else {
+                        isLoading = true
                         val precioDouble = precio.toDoubleOrNull() ?: 0.0
                         val nuevaPropiedad = Property(
                             titulo = titulo,
@@ -216,21 +221,31 @@ fun AddPropertyScreen(onNavigateBack: () -> Unit) {
                             imagenUri = imageUri?.toString() ?: ""
                         )
                         
-                        // Mensaje de éxito simulado para esta primera entrega
-                        Toast.makeText(
-                            context, 
-                            "¡Propiedad registrada exitosamente (Simulado)!\n${nuevaPropiedad.titulo}", 
-                            Toast.LENGTH_LONG
-                        ).show()
-                        
-                        onNavigateBack()
+                        scope.launch {
+                            repository.saveProperty(nuevaPropiedad).fold(
+                                onSuccess = {
+                                    isLoading = false
+                                    Toast.makeText(context, "¡Propiedad registrada exitosamente en Firestore!", Toast.LENGTH_LONG).show()
+                                    onNavigateBack()
+                                },
+                                onFailure = {
+                                    isLoading = false
+                                    Toast.makeText(context, "Error al guardar: ${it.message}", Toast.LENGTH_LONG).show()
+                                }
+                            )
+                        }
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(50.dp),
+                enabled = !isLoading
             ) {
-                Text("Registrar Propiedad", style = MaterialTheme.typography.titleMedium)
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text("Registrar Propiedad", style = MaterialTheme.typography.titleMedium)
+                }
             }
         }
     }

@@ -12,7 +12,8 @@ import com.example.alquigo.ui.auth.AuthViewModel
 @Composable
 fun HomeScreen(
     viewModel: AuthViewModel,
-    onNavigateToAddProperty: () -> Unit
+    onNavigateToAddProperty: () -> Unit,
+    onNavigateToPropertyList: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -35,16 +36,22 @@ fun HomeScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(text = "Bienvenido a AlquiGo", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Tu sesión está activa.")
-            
             Spacer(modifier = Modifier.height(32.dp))
             
             Button(
                 onClick = onNavigateToAddProperty,
-                modifier = Modifier.fillMaxWidth().height(50.dp)
+                modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
                 Text("➕ Registrar Propiedad", style = MaterialTheme.typography.titleMedium)
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            OutlinedButton(
+                onClick = onNavigateToPropertyList,
+                modifier = Modifier.fillMaxWidth().height(56.dp)
+            ) {
+                Text("🔍 Ver Propiedades Disponibles", style = MaterialTheme.typography.titleMedium)
             }
         }
     }
